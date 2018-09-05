@@ -1,0 +1,40 @@
+{
+  "name": "postgres-with-nodejs-talk",
+  "version": "1.0.0",
+  "private": true,
+  "main": "js/reveal.js",
+  "scripts": {
+    "test": "grunt test",
+    "start": "grunt serve"
+  },
+  "author": {
+    "name": "Sehrope Sarkuni",
+    "email": "sehrope@jackdb.com"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "dependencies": {
+    "escape-html": "^1.0.3",
+    "express": "~4.14.0",
+    "grunt-cli": "~1.2.0",
+    "mustache": "~2.2.1",
+    "socket.io": "^1.4.8"
+  },
+  "devDependencies": {
+    "grunt": "~1.0.1",
+    "grunt-autoprefixer": "~3.0.3",
+    "grunt-contrib-connect": "~0.11.2",
+    "grunt-contrib-cssmin": "~0.14.0",
+    "grunt-contrib-jshint": "~0.11.3",
+    "grunt-contrib-pug": "git://github.com/gruntjs/grunt-contrib-pug.git#a8448d2fde9c983fb97de8ac28f73a6763ff6d6b",
+    "grunt-contrib-qunit": "~1.2.0",
+    "grunt-contrib-uglify": "~0.9.2",
+    "grunt-contrib-watch": "~1.0.0",
+    "grunt-retire": "~0.3.10",
+    "grunt-sass": "~1.2.0",
+    "grunt-zip": "~0.17.1",
+    "node-sass": "~3.13.0"
+  },
+  "license": "MIT"
+}

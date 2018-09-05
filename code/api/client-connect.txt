@@ -1,0 +1,7 @@
+// Callback API:
+client.connect(
+    cb: (err: Error) => void
+) => void;
+
+// Promise API:
+client.connect() => Promise<void>;

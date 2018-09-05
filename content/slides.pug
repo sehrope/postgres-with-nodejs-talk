@@ -1,0 +1,1037 @@
+mixin docs-url(url)
+  p.small
+    a(href=url)= url
+
+mixin basic-url(url)
+  a(href=url)= url
+
+mixin foot-note(number)
+  p.small
+    | [#{number}]:
+    | 
+    block
+
+section
+  h3 PostgreSQL Application Development With Node.js
+  .container
+    .col
+      img(src='img/crossover-episode.png')
+      em
+        small "Node and Postgres?!
+        small What is this a crossover episode?"
+    .col
+      p Sehrope Sarkuni
+      p JackDB
+      p PostgresOpen SV 2018
+      p.small September 5, 2018
+
+section
+  h3 About Me
+  ul.unstyled
+    li Sehrope Sarkuni
+    li Founder of JackDB, Inc. <code>(jackdb.com)</code>
+    li Contributor to <code>pgjdbc</code> (Java driver)
+    li Contributor to <code>node-postgres</code> (Node.js driver)
+
+section
+  h3 Example Source
+  h4: +basic-url('https://github.com/sehrope/postgres-with-nodejs-code')
+  pre.
+    # Clone examples
+    git clone https://github.com/sehrope/postgres-with-nodejs-code
+    
+    # Setup environment
+    cd postgres-with-nodejs-code
+    vagrant up
+    npm install
+    cp docs/env.example .env
+
+    # Run an example:
+    node src/12345-example-name
+
+section
+  h3 PostgreSQL is...
+  ul
+    li The <strong>most advanced</strong> open source database
+    li An <strong>object relational</strong> database system
+    li <strong>Featureful</strong> and <strong>standards compliant</strong>
+    li My favorite database for persisent data
+
+section
+  h3 What is <code>node.js</code>?
+  ul
+    li Most <strong>popular</strong> web framework
+    li Great for rapid application development
+    li Very easy to get started
+    li ... but <strong>couple</strong> of gotchas
+
+section
+  h3 What is <code>node.js</code>?
+  ul
+    li <strong>Single</strong> thread of execution (per process)
+    li Fully <strong>asynchronous</strong> control flow
+    li Keep things async or your app will hang
+    li Much easier with modern <strong>async / await</strong>
+
+section
+  h3 Overview
+  h4 Part I
+  ul
+    li Intro to the <code>node-postgres</code> driver
+    li Key driver objects and structures
+    li Connecting to your database
+    li Running SQL commands
+
+section
+  h3 Database Drivers
+  ul
+    li Driver talks to DB server
+    li Handles authentication
+    li Serializes requests
+    li Deserializes responses
+    li Presents a language-specific interface
+    
+section
+  h3 Types of Drivers
+  .container
+    .col
+      p: strong Built atop libpq
+      ul
+        li Written in C
+        li Usually sys wide lib
+        li Part of Postgres core
+    .col
+      p: strong Native
+      ul
+        li Non-C Language
+        li No sys dependencies
+        li Easier to hack<small><sup>*</sup></small>
+  br
+  small: em *In the positive sense of the word 
+
+section
+  h3 Node-Postgres
+  ul
+    li <strong>Open source</strong> (MIT license)
+    li Created by <strong>Brian Carlson</strong><sup>[1]</sup>
+    li Non-blocking API
+    li Optional native bindings (libpq)
+  p: small
+   | [1]:
+   +basic-url('https://github.com/brianc')
+
+section
+  h3 Node-Postgres
+  p
+    +basic-url('https://www.npmjs.org/package/pg')
+  p
+    +basic-url('https://node-postgres.com')
+  p
+    +basic-url('https://github.com/brianc/node-postgres')
+  p Install the NPM module via:
+  pre: code.sh.
+    $ npm install pg --save
+
+section
+  h3 Getting Help
+  ul
+    li GitHub Issues
+    li IRC - #postgresql or #Node.js
+
+section
+  h3 Node-Postgres
+  h4 Two-Drivers in One
+  .container
+    .col
+      p: strong pg
+      ul
+        li No dependencies
+        li "Just Works"
+        li All features supported
+    .col
+      p: strong pg.native
+      ul
+        li Requires libpq / g++
+        li Build is platform specific
+        li Not all features
+
+section
+  h3 pg.native
+  p (libpq based driver)
+  ul
+    li Used to be a bit faster than pure-JS
+    li Inherits libpq improvements (ex: auth types)
+    li Provides both async and sync interfaces
+
+section
+  h3 PG
+  p (Pure-JS driver)
+  ul
+    li Writen 100% in JavaScript
+    li No external dependencies
+    li Supports advanced features
+
+section
+  h3 Use the pure-JS Driver
+  p: em (Unless you really know what you're doing)
+
+section
+  h3 Callbacks vs. Promises
+
+section
+  h3 Callbacks
+  p Original Node.JS style for async operations:
+  pre: code.js.
+    doSomething('foobar', function(err, result) {
+      if (err) {
+        // Oops! Handle error...
+      }
+      // Success! Use result...
+    });
+
+section
+  h3 Callback Hell
+  pre: code.js.
+    doSomething('foobar', function(err, result) {
+      if (err) {
+        return next(err);
+      }
+      doSomethingElse(result, function(err, otherResult) {
+        if (err) {
+          return next(err);
+        }
+        doOneMoreThing(otherResult, (function(err, finalResult)) {
+          if (err) {
+            return next(err);
+          }
+          console.log('Final Result: ', finalResult);
+        })
+      })
+    });
+  h4 "The Pyramid of Doom"
+
+section
+  h3 Promises
+  p Modern standard for async operations
+  pre: code.js.
+    doSomething('foobar')
+      .then(function(result) {
+        // Success! Use result...
+      })
+      .catch(function(err) {
+        // Oops! Handle error...
+      });
+
+section
+  h3 Promises
+  h4: code Async / Await
+  pre: code.js.
+    try {
+      const result = await doSomething('foobar')
+      // Success! Use result...
+    } catch (err) {
+      // Oops! Handle error...
+    }
+
+section
+  h3 Promises
+  h4: code Async / Await
+  pre: code.js.
+    try {
+      const result = await doSomething('foobar')
+      const otherResult = await doSomethingElse(result);
+      const finalResult = await doOneMoreThing(otherResult);
+      console.log('Final Result: ', finalResult);
+    } catch (err) {
+      return next(err);
+    }
+
+section
+  h3 Node-Postgres API
+  ul
+    li Originally supported only callback API
+    li: s Also supports an event API
+    li Full Promise API support since v7.0.0
+  p: strong Use the Promise API!
+
+section
+  p: strong: code pg.Client
+  ul
+    li Represents a database connection
+    li Primary interface for executing commands
+    li Most interactions will be with a Client object
+
+section
+  p: strong: code pg.Client
+  p Creating a Client - Defaults
+  pre: code.js
+    include:plaintext ../code/js/client-create.js
+
+section
+  p: strong: code pg.Client
+  p Creating a Client - Config URI
+  pre: code.js
+    include:plaintext ../code/js/client-create-config-uri.js
+  p Easiest for PaaS integration
+
+section
+  p: strong: code pg.Client
+  p Creating a Client - Config Object
+  pre: code.js
+    include:plaintext ../code/js/client-create-config-obj.js
+  p
+    | Most versatile as all options exposed.
+    br
+    | Required to specify custom type conversions.
+
+section
+  p: strong: code Client.connect()
+  ul
+    li Opens a <strong>socket</strong> to your database
+    li Initiates PostgreSQL protocol handshake
+    li Will fail on <strong>authentication errors</strong>
+    li Must complete before executing any commands
+
+section
+  p: strong: code Client.connect()
+  pre: code.js
+    include:plaintext ../code/api/client-connect.txt
+
+section
+  p: strong: code Client.end()
+  ul
+    li Closes the connection and underlying socket
+    li Must be called or else <strong>connection leaks</strong>
+
+section
+  p: strong: code Client.end()
+  pre: code.js
+    include:plaintext ../code/api/client-end.txt
+
+section
+  p: strong: code connect(...) &amp; end(...)
+  ul
+    li Both are low level APIs
+    li Okay for small / one-off usage
+    li Better approaches for real apps
+  p: em (We'll get into other options later)
+
+section
+  h3 &lt;Code /&gt;
+  p Connecting / Disconnecting
+
+section
+  p: strong: code Client.query(...)
+  p Execute a command &mdash; Basic API
+  pre: code.js
+    include:plaintext ../code/api/client-query-basic.txt
+
+section
+  p: strong: code Client.query(...)
+  p Command can be <strong>any</strong> SQL
+  ul
+    li Does not have to be a "query" (i.e. SELECT)
+    li Can be an INSERT, UPDATE, CREATE TABLE, ...
+    li Node-postgres will accept <strong>any</strong> string as a command
+    li Database determines the contents of result
+
+section
+  p: strong: code Client.query(...)
+  p Command can be <strong>any</strong> SQL
+  ul
+    li No distinction between SELECT, DML, or DDL
+    li Driver <strong>never parses</strong> your SQL
+    li Literally anything accepted by DB is fine
+
+section
+  p: strong: code Client.query(...)
+  p Advanced API
+  pre: code.js
+    include:plaintext ../code/api/client-query-advanced.txt
+  p (More on parameters later)
+
+section
+  p: strong: code pg.Result
+  p Output of a successful command
+  ul
+    li <code>rows</code> - Array of the query result rows
+    li <code>fields</code> - Array of the query result fields
+    li <code>command</code> - DML command (e.g. UPDATE)
+    li <code>rowCount</code> - DML row count
+
+section
+  p: strong: code Result.rows
+  p One entry in array per row of query results
+  pre: code.sql.
+     SELECT name, age FROM person
+  p Would have a <code>rows</code> property like:
+  pre: code.js.
+     [
+       {name: 'Alice', age: 20},
+       {name: 'Bob', age: 30},
+       {name: 'Carl', age: 40},
+     ]
+  p Default format maps fields to object properties
+
+section
+  p: strong: code Result.rows
+  p By default cannot have duplicate fields
+  pre: code.sql.
+     SELECT
+       1 AS x,
+       2 AS x
+  p Would have a <code>rows</code> property like:
+  pre: code.js.
+     [
+       {x: 2},
+     ]
+  p (Not a big deal in practice)
+
+section
+  h3 &lt;Code /&gt;
+  p Query
+
+section
+  h3 Result Data Types
+  h4 Note: This is Server to Client
+  p (Reverse will be part of parameters)
+
+section
+  h3 Result Data Types
+  ul
+    li Common types mapped to JS primitives
+    li Unhandled types mapped to JS strings
+    li Mostly maps types in ways you'd expect
+  p: em (Principle of Least Astonishment)
+
+section
+  h3 JavaScript Data Types
+  ul
+    li null
+    li undefined
+    li Boolean
+    li Number
+    li String
+    li Date
+    li Object / Array
+
+section
+  h3 PostgreSQL Data Types
+  ul
+    li boolean
+    li int2 / int4 / int8
+    li float / double / numeric / <s>money</s>
+    li char / text
+    li date / <s>timestamp</s> / timestamptz
+
+section
+  h3 PostgreSQL Data Types
+  ul
+    li bytea
+    li interval 
+    li uuid
+    li json / jsonb
+
+section
+  h3 PostgreSQL Data Types
+  ul
+    li: s xml
+    li inet / cidr / macaddr
+    li point / line / box / ...
+
+section
+  h3 PostgreSQL Data Types
+  ul
+    li Array (of any other type)
+    li Composite Types
+
+section
+  h3 Data Types
+  h3 SQL NULL
+  pre: code.js
+    include:plaintext ../code/js/null.js
+  p A SQL NULL becomes a JS null value
+  p Applies to <strong>all</strong> data types
+
+section
+  h3 Data Types
+  h3 boolean
+  pre: code.js
+    include:plaintext ../code/js/boolean.js
+  p A SQL boolean becomes a JS boolean
+
+section
+  h3 Data Types
+  h3 char / text
+  pre: code.js
+    include:plaintext ../code/js/text.js
+  p A SQL char or text becomes a JS string
+
+section
+  h3 Data Types
+  h3 UUID
+  pre: code.js
+    include:plaintext ../code/js/uuid.js
+  p UUID fields becomes a JS string
+
+section
+  h3 Data Types
+  h3 Numbers
+  p Have a couple gotchas...
+
+section
+  h3 JavaScript Numbers
+  ul
+    li Represents both integers and floating point
+    li Similar to a <strong>double</strong> in C or Java
+    li Safe integer range is &pm;2<sup>53</sup> - 1
+    li ... so <strong>cannot</strong> store all 64-bit integers!
+
+section
+  h3 JavaScript Numbers
+  pre: code.js
+    include:plaintext ../code/js/number.js
+  p (x + 1) === (x + 2) ?!
+  pre: code.txt
+    include:plaintext ../code/output/number.txt
+
+section
+  h3 Data Types
+  h4 Numbers
+  ul
+    li int2 - Number
+    li int4 (i.e. int) - Number
+    li int8 (i.e. bigint) - <strong>String</strong>
+    li numeric - <strong>String</strong>
+  p Numeric and bigint are <strong>Strings</strong>, not Numbers!
+
+section
+  h4 PSA: COUNT(*) is bigint
+  p Actual value or row count does not matter...
+  pre: code.sql
+    include:plaintext ../sql/count-bigint.sql
+  p (Which becomes a string in node-postgres)
+
+section
+  h3 Data Types
+  h4 bigint Workaround #1
+  p If you know it'll fit in int4...
+  pre: code.sql
+    include:plaintext ../sql/count-int.sql
+  p (Which becomes a number in node-postgres)
+
+section
+  h3 Data Types
+  h4 bigint Workaround #2
+  p If you know it'll fit in &pm;2<sup>52</sup>-1...
+  pre: code.js
+    include:plaintext ../code/js/bigint.js
+
+section
+  h3 Data Types
+  h4 bigint Workaround #3
+  p If it might <strong>not</strong> fit in &pm;2<sup>52</sup>-1...
+  ul
+    li Keep as a string in JS
+    li Use a helper like <code>big.js</code>
+    li
+      | Watch out for incrementing
+      br
+      code.js ('123' + 1) === '1231'
+
+section
+  h3 Data Types
+  h4 Date / Time
+  ul
+    li date - Date
+    li: s timestamp - Date
+    li timestamptz - Date
+
+section
+  h3 Data Types
+  h4 Date / Time
+  pre: code.js
+    include:plaintext ../code/js/date.js
+  p Slight gotcha with timestamp precision
+  p ... but usually not an issue in practice
+
+section
+  h3 &lt;Code /&gt;
+  p Timestamp Precision
+
+section
+  h3 Data Types
+  h4 JSON / JSONB
+  ul
+    li Exact type depends on value
+    li <code>JSON.parse(...)</code> of text
+    li Really convenient!
+
+section
+  h3 Data Types
+  h4 JSON / JSONB
+  pre: code.sql.
+    SELECT
+      t.x AS x_as_json,
+      t.x::text x_as_text
+    FROM (SELECT '{"a": 123}'::json AS x) t
+
+    x_as_json  | x_as_text  
+    ------------+------------
+    {"a": 123} | {"a": 123}
+  p If you do not want it parsed then convert to text in SQL
+
+section
+  h3 &lt;Code /&gt;
+  p Nested JSON example
+
+section
+  h3 Data Types
+  h4 Arrays become JS Arrays
+  p (Value types depends on array type)
+
+section
+  h3 Data Types
+  h4 bytea becomes Buffer
+  pre: code.sql.
+    SELECT
+      t.data,
+      octet_length(t.data) AS len,
+      pg_typeof(t.data)
+    FROM (SELECT '\x6a61636b6462'::bytea AS data) t
+
+         data      | len | pg_typeof 
+    ----------------+-----+-----------
+    \x6a61636b6462 |   6 | bytea
+
+section
+  h3 Data Types
+  h4 Enums becomes Strings
+  pre: code.sql.
+    CREATE TYPE talk_rating AS ENUM (
+      'meh',
+      'okay',
+      'good',
+      'great',
+      'awesome' -- (this talk)
+    )
+
+section
+  h3 &lt;Code /&gt;
+  p Data types
+
+section
+  h3 Parameterized Queries
+  ul
+    li Supports standard $1, $2, ... parameters
+    li Parameters specified as an array    
+    li You should <strong>always</strong> use parameters
+
+section
+  h2: u Always use parameters!
+  p: em (Unless you really know what you're doing)
+
+section
+  h3 Parameterized Queries
+  ul
+    li Avoids <strong>SQL injection</strong>
+    li Easier to reason about SQL
+    li Cleaner separation of SQL &lt;/&gt; Code
+    li Allows "large" number of variables
+
+section
+  h3 &lt;Code /&gt;
+  h4 Parameterized Queries!
+
+section
+  h3 Connection Pools
+  ul
+    li Creating connections is <strong>expensive</strong>
+    li Faster to <strong>reuse</strong> existing connection
+    li Prevents exceeding <strong>server limits</strong>
+
+section
+  h3 <code>pg.Pool</code>
+  p Separate module included with <code>pg</code>
+  pre: code.js.
+    const pg = require('pg');
+    const pool = new pg.Pool({
+      // Client Config:
+      host: 'localhost',
+      port: 5432,
+      user: 'test',
+      password: 't0ps3cret',
+      database: 'myapp',
+      ssl: true,
+      // Pool Config:
+      poolSize: 10,
+      idleTimeoutMillis: 10000,
+    });
+
+section
+  h3 <code>pg.Pool</code>
+  ul
+    li
+      code poolSize (default: 10)
+      p Maximum number of concurrent connections
+    li
+      code idleTimeoutMillis (default: 10000)
+      p Maximum lifetime for an unused connection
+
+section
+  p: strong <code>pool.end(...)</code>
+  p Shutting down the pool
+  pre: code.js
+    include:plaintext ../code/api/pool-end.txt
+
+section
+  p: strong <code>pool.end(...)</code>
+  p Not usually needed
+  ul
+    li Prefer <code>process.exit(0)</code>
+    li Only for dynamic pools
+    li (Which is usually a bad idea)
+
+section
+  p: strong <code>pool.query(...)</code>
+  p Executes a query
+  pre: code.js
+    include:plaintext ../code/api/pool-query.txt
+  p (Exact same as on pg.Client)
+
+section
+  p: strong <code>pool.query(...)</code>
+  ol
+    li If available, get connection from pool
+    li ... else create or wait for one
+    li Execute the query
+    li Return connection to the pool
+    li Finally return result or error to caller
+
+section
+  p: strong <code>pool.query(...)</code>
+  p Should <strong>prefer</strong> using this function
+  ul
+    li Automatically releases connections.
+    li Much simpler than doing it yourself.
+    li This should cover <strong>most</strong> usage.
+
+section
+  p: strong <code>pool.on('error', ...)</code>
+  h4 Handling background errors
+  pre: code.js
+    include:plaintext ../code/api/pool-error.txt
+
+section
+  p: strong <code>pool.on('error', ...)</code>
+  h4 Error Causes
+  ul
+    li Backend server restart
+    li Backend process crash (OOM)
+    li <code>pg_terminate_backend(...)</code>
+    li Trip over network cable
+  p By default Node.js crashes on unhandled errors
+
+section
+  h3 &lt;Code /&gt;
+  h4 Pools
+
+section
+  h3 Pools
+  h4 Just one more API function...
+
+section
+  p: strong <code>pool.connect(...)</code>
+  pre: code.js
+    include:plaintext ../code/api/pool-connect.txt
+
+section
+  p: strong <code>pool.connect(...)</code>
+  p Callback approach:
+  pre: code.js
+    include:plaintext ../code/js/pool-connect-callback.js
+
+section
+  p: strong <code>pool.connect(...)</code>
+  p Promise approach:
+  pre: code.js
+    include:plaintext ../code/js/pool-connect-promise.js
+  p: em (Much simpler!)
+
+section
+  p: strong <code>pool.connect(...)</code>
+  ul
+    li Stick to Promise based API
+    li Make sure you <strong>release</strong> your connections back
+    li Otherwise <strong>connection leaks</strong>
+
+section
+  p: strong <code>pool.connect(...)</code>
+  p So why bother if we have <code>pool.query(...)</code>?
+
+section
+  h3 Transactions!
+
+section
+  h3 Transactions
+  ul
+    li <code>BEGIN</code> / <code>COMMIT</code> / <code>ROLLBACK</code>
+    li Not possible with <code>pool.query(...)</code>
+    li Must have complete control of connection
+
+section
+  h3 Transactions
+  .container
+    .col
+      p Happy Path
+      pre: code.sql.
+        BEGIN;
+        -- Do stuff...
+        -- Do stuff...
+        -- Do stuff...
+        COMMIT;
+    .col
+      p Error Path
+      pre: code.sql.
+        BEGIN;
+        -- Do stuff...
+        -- Do stuff...
+        -- Do stuff...
+        ROLLBACK;
+  p Must COMMIT or ROLLBACK
+
+section
+  h3 Transactions
+  p Last minute error path
+  pre: code.sql.
+    BEGIN;
+    -- Do stuff...
+    -- Do stuff...
+    -- Do stuff...
+    COMMIT;
+    ROLLBACK;
+  p Because even COMMIT can fail
+  p (ex: deferred constraints)
+
+section
+  h4 Transaction <u>cannot</u> be async
+  p Seriously don't try it
+
+section
+  h4 <s>Async</s> Transactions
+  ol
+    li <code>BEGIN</code>
+    li <code>INSERT</code> ... (If an error happens here..)
+    li <code>UPDATE</code> ... (... does this still run?)
+    li <code>SELECT</code> ...
+    li <code>COMMIT / ROLLBACK</code>
+  p Async transactions make no sense
+
+section
+  h3 &lt;Code /&gt;
+  h4 Transactions
+
+section
+  h3 Memory Usage
+  ul
+    li Results are buffered in memory
+    li So <strong>entire</strong> result must fit
+    li Usually fine unless query is huge
+
+section
+  h3 Memory Usage
+  ul
+    li Don't worry about small queries
+    li Anything with <strong>finite</strong> row count is okay
+    li Even 1000s of rows can be fine
+    li ... or maybe it won't (row width dependent)
+
+section
+  h3 Cursors
+  ul
+    li Server feature to fetch "chunks" of rows
+    li Allows limiting client memory usage
+    li Node.js support via <code>pg-cursor</code> module
+  pre: code.sh.
+    $ npm install pg-cursor --save
+
+section
+  p: code: strong pg-cursor
+  pre: code.js.
+    const Cursor = require('pg-cursor');
+    
+    // Create:
+    const cursor = new Cursor(sql, params);
+    
+    // Submit:
+    client.query(cursor);
+
+    // Read:
+    cursor.read(100, (err, rows) => {
+      if (err) {
+        // Oops..
+      }
+      // Process rows
+    });
+  p Make sure to use dedicated connection 
+  p (not <code>pool.query(...)</code>)
+  
+section
+  p: code: strong pg-cursor
+  p To process a cursor:
+  ul
+    li 
+      | Call <code>cursor.read(...)</code> until rows.length === 0
+    li Or finish early by calling <code>cursor.close()</code>
+
+section
+  h3 &lt;Code /&gt;
+  h4 Cursors / Memory Usage
+
+section
+  h3 COPY
+  h4 The fastest way to move data
+  p (Both to and from server)
+
+section
+  h3 COPY
+  ul
+    li PostgreSQL specific extension
+    li Supported in all versions
+    li Much faster than a regular SELECT or INSERT
+
+section
+  h3 COPY OUT
+  pre: code.sql.
+    COPY (
+      SELECT *
+      FROM some_table t
+      WHERE t.foo = 'bar'
+    ) TO STDOUT
+    WITH (FORMAT CSV)
+
+section
+  h3 COPY IN
+  pre: code.sql.
+    COPY some_table
+    FROM STDIN
+    WITH (FORMAT CSV)
+
+section
+  h3 &lt;Code /&gt;
+  h4 COPY
+
+section
+  h3 Structuring Applications
+
+section
+  h3 Structuring Applications
+  ul
+    li Keep configuration out of code
+    li Prefer environment variables
+    li Centralize DB access routines
+
+section
+  h3 Structuring Applications
+  pre: code.txt.
+    app/
+      config/
+        db.js       - Only part of app that interfaces with pg
+      controllers/
+        index.js
+        home.js
+        admin.js
+      index.js
+
+section
+  h3 &lt;Code /&gt;
+  h4 Sample App
+
+section
+  h3 Parameters
+  p PostgreSQL only supports $1, $2, ... parameters
+  p The pg driver follows that behavior
+
+section
+  h3 Named Parameters
+  p Easier on the eyes:
+  pre: code.sql.
+    SELECT p.*
+    FROM person p
+    WHERE p.name = :name
+
+section
+  h3 Transactions
+  ul
+    li Usually involves managing client object
+    li Simplify a bit with wrappers but still hard
+    li Would be nice to "Just Work"
+
+section
+  h3 Transactions
+  h4 Java
+  pre: code.java.
+    @Transactional
+    public void doStuff() {
+      jdbcTemplate.update("INSERT ...");
+    }
+
+    @Transactional
+    public void doOtherStuff() {
+      jdbcTemplate.update("UPDATE ...");
+    }
+  p Allows annotating functions as transactional
+
+section
+  h3 Transactions
+  h4 Java
+  pre: code.java.
+    @Transactional
+    public void someImportantWork() {
+      doStuff();
+      doMoreStuff();
+      doOtherStuff();      
+    }
+  p All operations automatically join same transaction
+
+section
+  h3 Transactions
+  h4 Java
+  ul
+    li Handled in Java via thread-local storage
+    li Usually paired with a thread-per-request processing
+    li Magical ("Just Works")
+  p But Node.js doesn't have threads ...
+
+section
+  h3 Domains
+  ul
+    li "Thread-Local" but for contexts
+    li Part of node.js since v0.10
+    li <strong>Deprecated*</strong> since v4
+    li Will eventually be replaced by async_hook
+  p * Use at your own risk.
+  p: em (A lot of us do!)
+
+section
+  p: code pg-query-exec
+  pre: code.shell.
+    npm install pg-query-exec --save
+  ul
+    li Helper library written my me
+    li Named parameters
+    li Simple query / queryOne / update
+    li Domain based transactions
+    li TypeScript bindings
+
+section
+  h3 &lt;Code /&gt;
+  h4 pg-query-exec
+
+section
+  h3 Q&amp;A
+  p Sehrope Sarkuni
+  p sehrope@jackdb.com
+
+section
+  h3 Thank You!

@@ -1,0 +1,10 @@
+// Callback API:
+pool.connect(
+    cb: (
+      err: Error,
+      client: pg.Client,
+      done: (err?: Error): void) => void,
+) => void;
+
+// Promise API:
+pool.connect() => Promise<pg.PoolClient>;

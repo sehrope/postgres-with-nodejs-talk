@@ -1,0 +1,12 @@
+// Callback API:
+pool.query(
+    sql: string,
+    params: any[],
+    cb: (err: Error, result: pg.Result) => void,
+) => void;
+
+// Promise API:
+pool.query(
+    sql: string,
+    params: any[],
+) => Promise<pg.Result>;

@@ -1,0 +1,7 @@
+// Callback API:
+client.end(
+    cb: (err: Error) => void
+) => void;
+
+// Promise API:
+client.end() => Promise<void>;

@@ -1,0 +1,7 @@
+// Callback API:
+pool.end(
+    cb: (err: Error) => void,
+) => void;
+
+// Promise API:
+pool.end() => Promise<pg.Result>;

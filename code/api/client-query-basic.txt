@@ -1,0 +1,10 @@
+// Callback API:
+client.query(
+    sql: string,
+    cb: (err: Error, result: pg.Result) => void,
+) => void;
+
+// Promise API:
+client.query(
+    sql: string
+) => Promise<pg.Result>;
